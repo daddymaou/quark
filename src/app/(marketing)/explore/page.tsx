@@ -103,14 +103,15 @@ export default function ExplorePage() {
         ) : (
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {pens.map((pen) => (
-              <Link
+              <div
                 key={pen.id}
-                href={`/p/${pen.id}`}
-                className="block border border-line bg-surface p-5 transition-shadow duration-75 hover:shadow-snap-blue"
+                className="border border-line bg-surface p-5 transition-shadow duration-75 hover:shadow-snap-blue"
               >
-                <h3 className="font-ui text-lg font-semibold text-ink">
-                  {pen.title}
-                </h3>
+                <Link href={`/p/${pen.id}`} className="block">
+                  <h3 className="font-ui text-lg font-semibold text-ink hover:text-quarkBlue">
+                    {pen.title}
+                  </h3>
+                </Link>
                 <p className="mt-1 font-mono text-sm text-inkDim line-clamp-2">
                   {pen.description || 'No description provided.'}
                 </p>
@@ -122,14 +123,19 @@ export default function ExplorePage() {
                   ))}
                 </div>
                 <div className="mt-4 flex items-center justify-between border-t border-line pt-3 font-mono text-xs text-inkFaint">
-                  <span>{pen.author}</span>
+                  <Link
+                    href={`/u/${pen.author.replace(/^@/, '')}`}
+                    className="hover:text-quarkBlue"
+                  >
+                    {pen.author}
+                  </Link>
                   <span>{new Date(pen.updatedAt).toLocaleDateString()}</span>
                 </div>
                 <div className="mt-2 flex gap-4 font-mono text-xs text-inkFaint">
                   <span>🔄 {pen.forks} forks</span>
                   <span>👁️ {pen.views} views</span>
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
         )}
