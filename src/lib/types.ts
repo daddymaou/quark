@@ -14,6 +14,7 @@ export type ProjectVisibility = 'private' | 'public' | 'unlisted'
 export type Project = {
   id: string
   name: string
+  description?: string
   ownerId: string
   files: FileNode[]
   dependencies: Record<string, string> // npm package -> version

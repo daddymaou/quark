@@ -18,6 +18,11 @@ interface ProjectState {
   updateFileTree: (fileTree: FileNode[]) => Promise<string | null>
   updateDependencies: (dependencies: Record<string, string>) => void
   updateVisibility: (visibility: 'private' | 'public' | 'unlisted') => Promise<string | null>
+  updateProjectMeta: (meta: {
+    name?: string
+    description?: string
+    tags?: string[]
+  }) => Promise<string | null>
   setIsLoading: (loading: boolean) => void
   setError: (error: string | null) => void
   deleteProject: (id: string) => Promise<void>
@@ -144,6 +149,34 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       projects: get().projects.map((p) => (p.id === current.id ? updatedProject : p)),
     })
     const { error } = await apiPut<Project>(`/api/projects/${current.id}`, { visibility })
+    if (error) {
+      set({
+        error,
+        currentProject: current,
+        projects: prevProjects,
+      })
+      return error
+    }
+    set({ error: null })
+    return null
+  },
+
+  updateProjectMeta: async (meta) => {
+    const current = get().currentProject
+    if (!current) return null
+    const prevProjects = get().projects
+    const updatedProject = {
+      ...current,
+      ...meta,
+      updatedAt: new Date().toISOString(),
+    }
+    set({
+      currentProject: updatedProject,
+      projects: prevProjects.map((p) => (p.id === current.id ? updatedProject : p)),
+    })
+    // send only the metadata fields — editor file buffers are not flushed here,
+    // so a metadata save can never clobber unsaved code
+    const { error } = await apiPut<Project>(`/api/projects/${current.id}`, meta)
     if (error) {
       set({
         error,

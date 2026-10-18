@@ -10,6 +10,7 @@ import { Share2, Save, Upload, Terminal, Check } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { UserButton } from '@clerk/nextjs'
 import { NotificationBell } from '@/components/ui/NotificationBell'
+import { ShareModal } from '@/components/editor/ShareModal'
 import { FileNode } from '@/lib/types'
 
 const AUTOSAVE_DELAY_MS = 1500
@@ -20,6 +21,7 @@ export function EditorTopBar() {
   const [isSaving, setIsSaving] = useState(false)
   const [isPublishing, setIsPublishing] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
+  const [showShare, setShowShare] = useState(false)
   const [isClerkEnabled] = useState(() => {
     const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
     return !!(publishableKey && publishableKey.startsWith('pk_'))
@@ -175,13 +177,15 @@ export function EditorTopBar() {
           {isPublishing ? 'Publishing...' : currentProject?.visibility === 'public' ? 'Published' : 'Publish'}
         </Button>
 
-        {/* Share read-only link */}
-        <Link href={`/p/${currentProject?.id}`} target="_blank">
-          <Button variant="secondary" className="min-h-[32px] px-4 text-xs flex items-center gap-1.5">
-            <Share2 size={14} />
-            Share
-          </Button>
-        </Link>
+        {/* Share button — opens pen settings & share modal */}
+        <Button
+          variant="secondary"
+          className="min-h-[32px] px-4 text-xs flex items-center gap-1.5"
+          onClick={() => setShowShare(true)}
+        >
+          <Share2 size={14} />
+          Share
+        </Button>
 
         {isClerkEnabled && (
           <>
@@ -191,6 +195,14 @@ export function EditorTopBar() {
           </>
         )}
       </div>
+
+      {currentProject && (
+        <ShareModal
+          isOpen={showShare}
+          onClose={() => setShowShare(false)}
+          project={currentProject}
+        />
+      )}
     </header>
   )
 }
