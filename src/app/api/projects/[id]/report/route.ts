@@ -5,6 +5,7 @@ import { projects, reports } from '@/lib/db/schema'
 import { generateId } from '@/lib/db/ids'
 import { ok, created, fail, notFound, unauthorized } from '@/lib/api'
 import { getOrCreateUser } from '@/app/api/projects/route'
+import { consumeRateLimit, tooManyRequests } from '@/lib/rate-limit'
 
 export const runtime = 'nodejs'
 
@@ -27,6 +28,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const username = (claims?.username as string) || `user-${clerkUserId.slice(0, 8)}`
   const displayName = (claims?.name as string) || username
   const user = await getOrCreateUser({ clerkId: clerkUserId, email, username, displayName })
+
+  const limit = await consumeRateLimit(`report:${user.id}`, 5, 600_000)
+  if (!limit.allowed) return tooManyRequests(limit.retryAfterSeconds)
 
   const reportId = generateId('report')
   await db.insert(reports).values({
