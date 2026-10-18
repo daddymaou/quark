@@ -7,15 +7,18 @@ import { Logo } from '@/components/ui/Logo'
 import { useProjectStore } from '@/lib/store/projectStore'
 import { useEditorStore } from '@/lib/store/editorStore'
 import { Share2, Save, Upload, Terminal, Check } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { UserButton } from '@clerk/nextjs'
 import { FileNode } from '@/lib/types'
+
+const AUTOSAVE_DELAY_MS = 1500
 
 export function EditorTopBar() {
   const { currentProject, updateProject } = useProjectStore()
   const { dirtyFiles, fileContents, markClean, toggleConsole, isConsoleOpen } = useEditorStore()
   const [isSaving, setIsSaving] = useState(false)
   const [isPublishing, setIsPublishing] = useState(false)
+  const [actionError, setActionError] = useState<string | null>(null)
   const [isClerkEnabled] = useState(() => {
     const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
     return !!(publishableKey && publishableKey.startsWith('pk_'))
@@ -23,61 +26,81 @@ export function EditorTopBar() {
 
   const hasUnsavedChanges = Object.keys(dirtyFiles).length > 0
 
+  // walk the file tree and flush editorStore buffers into the project
+  const flushFiles = (nodes: FileNode[]): FileNode[] => {
+    return nodes.map((node) => {
+      if (node.type === 'file') {
+        const edited = fileContents[node.id]
+        return {
+          ...node,
+          content: edited !== undefined ? edited : node.content,
+        }
+      } else if (node.type === 'folder' && node.children) {
+        return {
+          ...node,
+          children: flushFiles(node.children),
+        }
+      }
+      return node
+    })
+  }
+
   const handleSave = async () => {
     if (!currentProject) return
     setIsSaving(true)
+    setActionError(null)
 
-    // fake some save latency so it doesn't feel instant
-    await new Promise((resolve) => setTimeout(resolve, 300))
-
-    // walk the file tree and flush editorStore buffers into the project
-    const saveFilesRecursive = (nodes: FileNode[]): FileNode[] => {
-      return nodes.map((node) => {
-        if (node.type === 'file') {
-          const edited = fileContents[node.id]
-          return {
-            ...node,
-            content: edited !== undefined ? edited : node.content,
-          }
-        } else if (node.type === 'folder' && node.children) {
-          return {
-            ...node,
-            children: saveFilesRecursive(node.children),
-          }
-        }
-        return node
-      })
-    }
-
-    const updatedFiles = saveFilesRecursive(currentProject.files)
     const updatedProject = {
       ...currentProject,
-      files: updatedFiles,
+      files: flushFiles(currentProject.files),
       updatedAt: new Date().toISOString(),
     }
 
-    // persist to the database via the API
-    await updateProject(updatedProject)
-
-    // all good, mark clean
-    Object.keys(dirtyFiles).forEach((id) => markClean(id))
+    const error = await updateProject(updatedProject)
+    if (error) {
+      setActionError(error)
+    } else {
+      Object.keys(dirtyFiles).forEach((id) => markClean(id))
+    }
     setIsSaving(false)
   }
 
   const handlePublish = async () => {
     if (!currentProject) return
     setIsPublishing(true)
-    await new Promise((resolve) => setTimeout(resolve, 600))
-    // flip to public and persist via the API
+    setActionError(null)
+
     const updatedProject = {
       ...currentProject,
+      files: flushFiles(currentProject.files),
       visibility: 'public' as const,
-      publishedAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     }
-    await updateProject(updatedProject)
+
+    const error = await updateProject(updatedProject)
+    if (error) {
+      setActionError(error)
+    } else {
+      Object.keys(dirtyFiles).forEach((id) => markClean(id))
+    }
     setIsPublishing(false)
   }
+
+  // keep the latest save handler in a ref so the autosave timer never
+  // captures a stale closure over fileContents / currentProject
+  const saveRef = useRef(handleSave)
+  useEffect(() => {
+    saveRef.current = handleSave
+  })
+
+  // debounced autosave: every editor change resets the timer
+  useEffect(() => {
+    if (!hasUnsavedChanges || isSaving || isPublishing) return
+    const timer = setTimeout(() => {
+      void saveRef.current()
+    }, AUTOSAVE_DELAY_MS)
+    return () => clearTimeout(timer)
+  }, [hasUnsavedChanges, isSaving, isPublishing, fileContents])
 
   return (
     <header className="flex items-center justify-between border-b border-line bg-surface px-4 py-2 select-none z-20">
@@ -93,6 +116,14 @@ export function EditorTopBar() {
         </Badge>
         {hasUnsavedChanges && (
           <span className="font-mono text-xs text-quarkRed">● unsaved</span>
+        )}
+        {actionError && (
+          <span
+            className="max-w-[280px] truncate font-mono text-xs text-quarkRed"
+            title={actionError}
+          >
+            {actionError}
+          </span>
         )}
       </div>
 

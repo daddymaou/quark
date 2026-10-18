@@ -14,10 +14,10 @@ interface ProjectState {
   setProjects: (projects: Project[]) => void
   loadProjects: () => Promise<void>
   createProject: (name: string) => Promise<Project>
-  updateProject: (project: Project) => Promise<void>
+  updateProject: (project: Project) => Promise<string | null>
   updateFileTree: (fileTree: FileNode[]) => Promise<string | null>
   updateDependencies: (dependencies: Record<string, string>) => void
-  updateVisibility: (visibility: 'private' | 'public' | 'unlisted') => void
+  updateVisibility: (visibility: 'private' | 'public' | 'unlisted') => Promise<string | null>
   setIsLoading: (loading: boolean) => void
   setError: (error: string | null) => void
   deleteProject: (id: string) => Promise<void>
@@ -68,15 +68,23 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   },
 
   updateProject: async (project: Project) => {
-    const updatedProjects = get().projects.map((p) => (p.id === project.id ? project : p))
+    const prev = get()
+    const updatedProjects = prev.projects.map((p) => (p.id === project.id ? project : p))
     set({
       currentProject: project,
       projects: updatedProjects,
     })
     const { error } = await apiPut<Project>(`/api/projects/${project.id}`, project)
     if (error) {
-      set({ error })
+      set({
+        error,
+        currentProject: prev.currentProject,
+        projects: prev.projects,
+      })
+      return error
     }
+    set({ error: null })
+    return null
   },
 
   updateFileTree: async (fileTree: FileNode[]) => {
@@ -122,9 +130,10 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     })
   },
 
-  updateVisibility: (visibility: 'private' | 'public' | 'unlisted') => {
+  updateVisibility: async (visibility: 'private' | 'public' | 'unlisted') => {
     const current = get().currentProject
-    if (!current) return
+    if (!current) return null
+    const prevProjects = get().projects
     const updatedProject = {
       ...current,
       visibility,
@@ -134,7 +143,17 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       currentProject: updatedProject,
       projects: get().projects.map((p) => (p.id === current.id ? updatedProject : p)),
     })
-    void apiPut<Project>(`/api/projects/${current.id}`, { visibility })
+    const { error } = await apiPut<Project>(`/api/projects/${current.id}`, { visibility })
+    if (error) {
+      set({
+        error,
+        currentProject: current,
+        projects: prevProjects,
+      })
+      return error
+    }
+    set({ error: null })
+    return null
   },
 
   setIsLoading: (loading: boolean) => {
