@@ -97,18 +97,22 @@ export async function getOrCreateUser({ clerkId, email, username, displayName }:
 }
 
 export async function GET(req: NextRequest) {
+  const { auth } = await import('@clerk/nextjs/server')
+  const { userId } = await auth()
+  if (!userId) return unauthorized()
+
+  const user = await resolveUser(userId)
+  if (!user) return ok([])
+
   const { searchParams } = new URL(req.url)
   const ownerId = searchParams.get('ownerId')
+  if (ownerId && ownerId !== user.id) return unauthorized()
 
-  if (ownerId) {
-    const rows = await db.query.projects.findMany({
-      where: (p, { eq }) => eq(p.ownerId, ownerId),
-      orderBy: (p, { desc }) => [desc(p.updatedAt)],
-    })
-    return ok(rows.map(toProject))
-  }
-
-  return ok([])
+  const rows = await db.query.projects.findMany({
+    where: (p, { eq }) => eq(p.ownerId, user.id),
+    orderBy: (p, { desc }) => [desc(p.updatedAt)],
+  })
+  return ok(rows.map(toProject))
 }
 
 export async function POST(req: NextRequest) {

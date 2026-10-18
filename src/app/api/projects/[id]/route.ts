@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { eq } from 'drizzle-orm'
+import { and, count, eq, sql } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { projects } from '@/lib/db/schema'
 import { ok, created, fail, notFound, unauthorized } from '@/lib/api'
@@ -74,9 +74,29 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   if (typeof body?.description === 'string') updates.description = body.description
   if (Array.isArray(body?.files)) updates.files = body.files
   if (body?.dependencies && typeof body.dependencies === 'object') updates.dependencies = body.dependencies
-  if (body?.visibility && ['private', 'public', 'unlisted'].includes(body.visibility)) {
-    updates.visibility = body.visibility
-    if (body.visibility === 'public' && !row.publishedAt) {
+
+  const nextVisibility =
+    body?.visibility && ['private', 'public', 'unlisted'].includes(body.visibility)
+      ? (body.visibility as 'private' | 'public' | 'unlisted')
+      : null
+  const wasPublic = row.visibility === 'public'
+  const willBePublic = nextVisibility === 'public'
+
+  if (nextVisibility) {
+    if (willBePublic && !wasPublic) {
+      const [{ total }] = await db
+        .select({ total: count() })
+        .from(projects)
+        .where(and(eq(projects.ownerId, owner.id), eq(projects.visibility, 'public')))
+      if (total >= owner.maxPublished) {
+        return fail(
+          `Publish limit reached — your plan allows ${owner.maxPublished} published pens. Upgrade to publish more.`,
+          403
+        )
+      }
+    }
+    updates.visibility = nextVisibility
+    if (willBePublic && !row.publishedAt) {
       updates.publishedAt = new Date()
     }
   }
@@ -84,6 +104,21 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   updates.updatedAt = new Date()
 
   await db.update(projects).set(updates).where(eq(projects.id, id))
+
+  if (nextVisibility && willBePublic !== wasPublic) {
+    if (willBePublic) {
+      await db
+        .update(users)
+        .set({ publishedCount: sql`${users.publishedCount} + 1` })
+        .where(eq(users.id, owner.id))
+    } else {
+      await db
+        .update(users)
+        .set({ publishedCount: sql`greatest(${users.publishedCount} - 1, 0)` })
+        .where(eq(users.id, owner.id))
+    }
+  }
+
   const updated = await db.query.projects.findFirst({ where: eq(projects.id, id) })
   if (!updated) return notFound('Pen not found')
   return ok(toProject(updated))
