@@ -24,15 +24,26 @@ export default function ExplorePage() {
   const [sort, setSort] = useState<'recent' | 'trending'>('recent')
   const [tagFilter, setTagFilter] = useState('')
 
-  // pick up ?tag= from the URL after mount (client components still SSR)
+  // pick up ?q= and ?tag= from the URL after mount (client components still SSR)
   useEffect(() => {
-    const initial = new URLSearchParams(window.location.search).get('tag')
-    if (initial) setTagFilter(initial.toLowerCase())
+    const params = new URLSearchParams(window.location.search)
+    const initialQ = params.get('q')
+    const initialTag = params.get('tag')
+    if (initialQ) setQuery(initialQ)
+    if (initialTag) setTagFilter(initialTag.toLowerCase())
   }, [])
 
   useEffect(() => {
     const controller = new AbortController()
     const timer = setTimeout(async () => {
+      // keep the filtered view shareable without adding history entries
+      const url = new URL(window.location.href)
+      if (query) url.searchParams.set('q', query)
+      else url.searchParams.delete('q')
+      if (tagFilter) url.searchParams.set('tag', tagFilter)
+      else url.searchParams.delete('tag')
+      window.history.replaceState(null, '', url.toString())
+
       try {
         const params = new URLSearchParams()
         if (query) params.set('q', query)
