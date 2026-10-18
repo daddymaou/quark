@@ -22,6 +22,13 @@ export default function ExplorePage() {
   const [isLoading, setIsLoading] = useState(true)
   const [query, setQuery] = useState('')
   const [sort, setSort] = useState<'recent' | 'trending'>('recent')
+  const [tagFilter, setTagFilter] = useState('')
+
+  // pick up ?tag= from the URL after mount (client components still SSR)
+  useEffect(() => {
+    const initial = new URLSearchParams(window.location.search).get('tag')
+    if (initial) setTagFilter(initial.toLowerCase())
+  }, [])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -29,6 +36,7 @@ export default function ExplorePage() {
       try {
         const params = new URLSearchParams()
         if (query) params.set('q', query)
+        if (tagFilter) params.set('tag', tagFilter)
         params.set('sort', sort)
         const res = await fetch(`/api/projects/public?${params.toString()}`, {
           signal: controller.signal,
@@ -49,7 +57,16 @@ export default function ExplorePage() {
       clearTimeout(timer)
       controller.abort()
     }
-  }, [query, sort])
+  }, [query, sort, tagFilter])
+
+  const toggleTag = (tag: string) => {
+    const next = tag === tagFilter ? '' : tag
+    setTagFilter(next)
+    const url = new URL(window.location.href)
+    if (next) url.searchParams.set('tag', next)
+    else url.searchParams.delete('tag')
+    window.history.replaceState(null, '', url.toString())
+  }
 
   return (
     <div className="px-4 py-16 md:px-8">
@@ -88,10 +105,25 @@ export default function ExplorePage() {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search pens by name..."
+            placeholder="Search pens by name or description..."
             className="w-full border border-line bg-surface2 px-4 py-3 font-mono text-sm text-ink placeholder:text-inkFaint focus:border-quarkBlue focus:shadow-snap-blue focus:outline-none"
           />
         </div>
+
+        {/* Active tag filter */}
+        {tagFilter && (
+          <div className="mt-4 flex items-center gap-3 border border-line bg-surface px-4 py-2 font-mono text-xs text-inkDim">
+            <span>
+              Filtering by <span className="text-quarkBlue">#{tagFilter}</span>
+            </span>
+            <button
+              onClick={() => toggleTag(tagFilter)}
+              className="text-inkFaint underline transition-colors hover:text-ink"
+            >
+              clear
+            </button>
+          </div>
+        )}
 
         {/* Pen Grid */}
         {isLoading ? (
@@ -117,7 +149,14 @@ export default function ExplorePage() {
                 </p>
                 <div className="mt-3 flex flex-wrap gap-1.5">
                   {pen.tags.map((tag) => (
-                    <Badge key={tag} variant="info" className="text-[10px]">
+                    <Badge
+                      key={tag}
+                      variant="info"
+                      onClick={() => toggleTag(tag)}
+                      className={`cursor-pointer text-[10px] transition-colors hover:bg-quarkBlue/10 ${
+                        tagFilter === tag ? 'bg-quarkBlue/15' : ''
+                      }`}
+                    >
                       #{tag}
                     </Badge>
                   ))}
@@ -144,11 +183,21 @@ export default function ExplorePage() {
         {!isLoading && pens.length === 0 && (
           <div className="mt-16 flex flex-col items-center justify-center border border-line bg-surface p-12 text-center">
             <p className="font-mono text-sm text-inkDim">
-              No public pens yet.
+              {tagFilter
+                ? `No public pens tagged #${tagFilter}.`
+                : 'No public pens yet.'}
             </p>
-            <Link href="/dashboard" className="mt-4">
-              <Button variant="primary">Create the first pen</Button>
-            </Link>
+            {tagFilter ? (
+              <button onClick={() => toggleTag(tagFilter)} className="mt-4">
+                <span className="inline-flex min-h-[40px] items-center border border-line px-4 font-mono text-sm text-inkDim transition-colors hover:text-ink">
+                  Clear filter
+                </span>
+              </button>
+            ) : (
+              <Link href="/dashboard" className="mt-4">
+                <Button variant="primary">Create the first pen</Button>
+              </Link>
+            )}
           </div>
         )}
       </div>

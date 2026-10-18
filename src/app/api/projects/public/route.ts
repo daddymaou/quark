@@ -1,23 +1,27 @@
 import { NextRequest } from 'next/server'
+import { arrayContains } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { ok } from '@/lib/api'
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const q = (searchParams.get('q') || '').toLowerCase()
+  const tag = (searchParams.get('tag') || '').toLowerCase()
   const sort = searchParams.get('sort') || 'recent'
 
   const rows = await db.query.projects.findMany({
     where: (p, { eq, or, like, and }) => {
-      const isPublic = eq(p.visibility, 'public')
-      if (!q) return isPublic
-      return and(
-        isPublic,
-        or(
-          like(p.name, `%${q}%`),
-          like(p.description ?? '', `%${q}%`),
+      const filters = [eq(p.visibility, 'public')]
+      if (tag) filters.push(arrayContains(p.tags, [tag]))
+      if (q) {
+        filters.push(
+          or(
+            like(p.name, `%${q}%`),
+            like(p.description ?? '', `%${q}%`),
+          )!
         )
-      )
+      }
+      return and(...filters)
     },
     orderBy: (p, { desc }) =>
       sort === 'trending'

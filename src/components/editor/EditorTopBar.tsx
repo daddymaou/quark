@@ -105,6 +105,36 @@ export function EditorTopBar() {
     return () => clearTimeout(timer)
   }, [hasUnsavedChanges, isSaving, isPublishing, fileContents])
 
+  // track saving state in a ref so the keyboard handler never fires a
+  // concurrent save from a stale closure
+  const savingRef = useRef(false)
+  useEffect(() => {
+    savingRef.current = isSaving
+  }, [isSaving])
+
+  // Ctrl+S / Cmd+S saves immediately instead of waiting for autosave
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault()
+        if (!savingRef.current) void saveRef.current()
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
+
+  // warn before the tab closes with unsaved changes still in buffers
+  useEffect(() => {
+    if (!hasUnsavedChanges) return
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault()
+      e.returnValue = ''
+    }
+    window.addEventListener('beforeunload', onBeforeUnload)
+    return () => window.removeEventListener('beforeunload', onBeforeUnload)
+  }, [hasUnsavedChanges])
+
   return (
     <header className="flex items-center justify-between border-b border-line bg-surface px-4 py-2 select-none z-20">
       <div className="flex items-center gap-4">
@@ -150,6 +180,7 @@ export function EditorTopBar() {
           className="min-h-[32px] px-4 text-xs flex items-center gap-1.5"
           onClick={handleSave}
           disabled={isSaving || !hasUnsavedChanges}
+          title="Save (Ctrl+S)"
         >
           {isSaving ? (
             <span className="animate-pulse">Saving...</span>
