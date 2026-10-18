@@ -1,4 +1,4 @@
-import { readFileSync } from 'fs'
+import { readFileSync, readdirSync } from 'fs'
 import { join } from 'path'
 import { describe } from 'vitest'
 import { neon } from '@neondatabase/serverless'
@@ -42,9 +42,14 @@ export async function runMigration() {
   if (!url) return
   if (migrationRan) return
   migrationRan = true
-  const sqlText = readFileSync(join(process.cwd(), 'drizzle', '0000_initial.sql'), 'utf-8')
+  const files = readdirSync(join(process.cwd(), 'drizzle'))
+    .filter((f) => f.endsWith('.sql'))
+    .sort()
   const sql = neon(url)
-  await sql`${sqlText}`
+  for (const file of files) {
+    const sqlText = readFileSync(join(process.cwd(), 'drizzle', file), 'utf-8')
+    await sql`${sqlText}`
+  }
 }
 
 let uid = 0

@@ -5,6 +5,7 @@ import { projects, users, notifications } from '@/lib/db/schema'
 import { generateId } from '@/lib/db/ids'
 import { ok, notFound, unauthorized, fail } from '@/lib/api'
 import { getOrCreateUser } from '@/app/api/projects/route'
+import { consumeRateLimit, tooManyRequests, clientIp } from '@/lib/rate-limit'
 
 export const runtime = 'nodejs'
 
@@ -29,6 +30,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     forkerId = user.id
     forkerName = user.displayName || user.username
   }
+
+  // forks create a full project row — limit signed-in users by account and
+  // guests by IP so anonymous traffic can't mass-clone pens
+  const limitKey = forkerId ? `fork:user:${forkerId}` : `fork:ip:${clientIp(req.headers)}`
+  const limit = await consumeRateLimit(limitKey, 10, 3_600_000)
+  if (!limit.allowed) return tooManyRequests(limit.retryAfterSeconds)
 
   const forkId = generateId('pen')
   await db.insert(projects).values({
