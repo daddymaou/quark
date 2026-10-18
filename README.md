@@ -95,11 +95,12 @@ Administrative dashboard for platform management, user moderation, report tracki
    ```
 
 3. **Configure Environment Variables**:
-   Create a local `.env.local` file (untracked in git):
+   Copy [`.env.example`](.env.example) to `.env.local` (untracked in git) and fill in your keys:
    ```env
    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
    CLERK_SECRET_KEY=sk_test_...
    RESEND_API_KEY=re_...
+   DATABASE_URL=postgresql://...
    ```
 
 4. **Launch Development Server**:
@@ -115,7 +116,7 @@ Administrative dashboard for platform management, user moderation, report tracki
 QUARK is built with modern, performant web standards:
 
 *   **Frontend Framework**: [Next.js 16 (App Router)](https://nextjs.org/) + TypeScript for route segregation and Server Functions.
-*   **Authentication & Security**: [Clerk Auth](https://clerk.com/) managing user identities and protected route middleware ([`src/middleware.ts`](file:///c:/Users/dell/Documents/antigravity/delightful-euclid/src/middleware.ts)).
+*   **Authentication & Security**: [Clerk Auth](https://clerk.com/) managing user identities and protected route middleware ([`src/middleware.ts`](src/middleware.ts)).
 *   **State Management**: [Zustand](https://github.com/pmndrs/zustand) for high-performance reactive updates across the editor and file tree.
 *   **Styling**: [Tailwind CSS v4](https://tailwindcss.com/) paired with custom CSS design tokens.
 *   **Transactional Emails**: [Resend](https://resend.com/) powering programmatic email delivery.
@@ -126,13 +127,13 @@ QUARK is built with modern, performant web standards:
 
 QUARK includes automated security and code quality pipelines:
 
-*   **Authentication Middleware**: Active session protection via [`src/middleware.ts`](file:///c:/Users/dell/Documents/antigravity/delightful-euclid/src/middleware.ts) protecting `/dashboard`, `/pen/*`, `/settings`, `/billing`, and `/admin/*`.
-*   **API Security**: Endpoint guards and strict input validation regex on transactional routes ([`/api/email/welcome`](file:///c:/Users/dell/Documents/antigravity/delightful-euclid/src/app/api/email/welcome/route.ts), [`/api/email/fork`](file:///c:/Users/dell/Documents/antigravity/delightful-euclid/src/app/api/email/fork/route.ts)).
-*   **DevSecOps CI Pipeline**: Automated GitHub Actions workflow ([`.github/workflows/devsecops.yml`](file:///c:/Users/dell/Documents/antigravity/delightful-euclid/.github/workflows/devsecops.yml)) executing:
+*   **Authentication Middleware**: Active session protection via [`src/middleware.ts`](src/middleware.ts) protecting `/dashboard`, `/pen/*`, `/settings`, `/billing`, and `/admin/*`.
+*   **API Security**: Endpoint guards and strict input validation regex on transactional routes ([`/api/email/welcome`](src/app/api/email/welcome/route.ts), [`/api/email/fork`](src/app/api/email/fork/route.ts)).
+*   **DevSecOps CI Pipeline**: Automated GitHub Actions workflow ([`.github/workflows/devsecops.yml`](.github/workflows/devsecops.yml)) executing:
     - ESLint (`npm run lint`) & TypeScript strict typechecking (`npx tsc --noEmit`).
     - Automated Secret Scanning via **Gitleaks** (`gitleaks-action`).
     - Dependency Vulnerability Audits (`npm audit`).
-*   **Automated Dependency Management**: Dependabot ([`.github/dependabot.yml`](file:///c:/Users/dell/Documents/antigravity/delightful-euclid/.github/dependabot.yml)) grouped weekly dependency updates ignoring unreviewed semver-major bumps.
+*   **Automated Dependency Management**: Dependabot ([`.github/dependabot.yml`](.github/dependabot.yml)) grouped weekly dependency updates ignoring unreviewed semver-major bumps.
 
 ---
 
