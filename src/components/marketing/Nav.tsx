@@ -4,10 +4,22 @@
 import { Wordmark } from '@/components/ui/Wordmark'
 import { Button } from '@/components/ui/Button'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useState, FormEvent } from 'react'
+import { Search } from 'lucide-react'
 
 export function Nav() {
   const [isOpen, setIsOpen] = useState(false)
+  const [search, setSearch] = useState('')
+  const router = useRouter()
+
+  const handleSearch = (e: FormEvent) => {
+    e.preventDefault()
+    const q = search.trim()
+    if (!q) return
+    setIsOpen(false)
+    router.push(`/explore?q=${encodeURIComponent(q)}`)
+  }
 
   return (
     <nav className="sticky top-0 z-50 border-b border-line bg-void/90 backdrop-blur-md px-4 py-3 md:px-8">
@@ -17,6 +29,20 @@ export function Nav() {
         </Link>
 
         <div className="hidden items-center gap-6 font-mono text-sm text-inkDim md:flex">
+          <form onSubmit={handleSearch} className="relative">
+            <Search
+              className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-inkFaint"
+              aria-hidden="true"
+            />
+            <input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search pens..."
+              aria-label="Search pens"
+              className="w-40 border border-line bg-surface2 py-1.5 pl-8 pr-2 font-mono text-xs text-ink placeholder:text-inkFaint focus:border-quarkBlue focus:outline-none"
+            />
+          </form>
           <Link href="/explore" className="hover:text-ink transition-colors">
             Explore
           </Link>
@@ -51,6 +77,20 @@ export function Nav() {
 
       {isOpen && (
         <div className="mt-4 flex flex-col gap-4 border-t border-line pt-4 font-mono text-sm text-inkDim md:hidden">
+          <form onSubmit={handleSearch} className="relative">
+            <Search
+              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-inkFaint"
+              aria-hidden="true"
+            />
+            <input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search pens..."
+              aria-label="Search pens"
+              className="w-full border border-line bg-surface2 py-2.5 pl-9 pr-3 font-mono text-sm text-ink placeholder:text-inkFaint focus:border-quarkBlue focus:outline-none"
+            />
+          </form>
           <Link href="/explore" className="hover:text-ink transition-colors">
             Explore
           </Link>
