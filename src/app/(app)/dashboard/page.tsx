@@ -7,6 +7,8 @@ import { UsageBadge } from '@/components/dashboard/UsageBadge'
 import { Button } from '@/components/ui/Button'
 import { Avatar } from '@/components/ui/Avatar'
 import { OnboardingTour } from '@/components/onboarding/OnboardingTour'
+import { get as apiGet } from '@/lib/api-client'
+import type { User } from '@/lib/types'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { useUser } from '@clerk/nextjs'
@@ -14,6 +16,7 @@ import { useUser } from '@clerk/nextjs'
 export default function DashboardPage() {
   const { projects, isLoading, loadProjects } = useProjectStore()
   const { user, isLoaded } = useUser()
+  const [profile, setProfile] = useState<User | null>(null)
   const [isClerkEnabled] = useState(() => {
     const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
     return !!(publishableKey && publishableKey.startsWith('pk_'))
@@ -22,6 +25,17 @@ export default function DashboardPage() {
   useEffect(() => {
     loadProjects()
   }, [loadProjects])
+
+  useEffect(() => {
+    if (!isClerkEnabled) return
+    let cancelled = false
+    apiGet<User | null>('/api/me').then(({ data }) => {
+      if (!cancelled && data) setProfile(data)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [isClerkEnabled])
 
   if (isLoading || (isClerkEnabled && !isLoaded)) {
     return (
@@ -61,7 +75,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Usage Badge */}
-      <UsageBadge used={publishedCount} total={3} />
+      <UsageBadge used={publishedCount} total={profile?.maxPublished ?? 3} />
 
       {/* Projects Grid */}
       {projects.length === 0 ? (
