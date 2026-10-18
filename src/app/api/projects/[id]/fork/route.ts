@@ -16,7 +16,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const source = await db.query.projects.findFirst({ where: eq(projects.id, id) })
   if (!source) return notFound('Pen not found')
 
-  const forkerName = 'Guest Developer'
+  let forkerName = 'a guest user'
   let forkerId: string | null = null
 
   if (clerkUserId) {
@@ -27,6 +27,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const displayName = (claims?.name as string) || username
     const user = await getOrCreateUser({ clerkId: clerkUserId, email, username, displayName })
     forkerId = user.id
+    forkerName = user.displayName || user.username
   }
 
   const forkId = generateId('pen')
@@ -53,7 +54,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       userId: owner.id,
       type: 'fork',
       message: `Your pen "${source.name}" was forked by ${forkerName}.`,
-      link: `/p/${forkId}`,
+      // private pens are only reachable by their owner, so point the owner
+      // at the editor; public/unlisted pens open on the share page
+      link: source.visibility === 'private' ? `/pen/${id}` : `/p/${id}`,
     })
   }
 

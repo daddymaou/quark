@@ -9,6 +9,7 @@ import { useEditorStore } from '@/lib/store/editorStore'
 import { Share2, Save, Upload, Terminal, Check } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { UserButton } from '@clerk/nextjs'
+import { NotificationBell } from '@/components/ui/NotificationBell'
 import { FileNode } from '@/lib/types'
 
 const AUTOSAVE_DELAY_MS = 1500
@@ -185,6 +186,7 @@ export function EditorTopBar() {
         {isClerkEnabled && (
           <>
             <div className="h-4 w-px bg-line mx-1" />
+            <NotificationBell />
             <UserButton />
           </>
         )}

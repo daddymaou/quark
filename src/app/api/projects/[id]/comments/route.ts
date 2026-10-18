@@ -61,6 +61,18 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     content,
   })
 
+  // notify the pen owner unless they commented on their own pen
+  if (project.ownerId !== user.id) {
+    const { notifications } = await import('@/lib/db/schema')
+    await db.insert(notifications).values({
+      id: generateId('notif'),
+      userId: project.ownerId,
+      type: 'comment',
+      message: `${user.displayName || user.username} commented on "${project.name}".`,
+      link: project.visibility === 'private' ? `/pen/${id}` : `/p/${id}`,
+    })
+  }
+
   const row = await db.query.comments.findFirst({ where: eq(comments.id, commentId) })
   if (!row) return fail('Failed to create comment', 500)
   return created(row, 'Comment posted')

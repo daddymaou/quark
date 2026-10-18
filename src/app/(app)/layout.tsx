@@ -6,6 +6,7 @@ import { useProjectStore } from '@/lib/store/projectStore'
 import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
 import { Logo } from '@/components/ui/Logo'
+import { NotificationBell } from '@/components/ui/NotificationBell'
 
 export default function AppLayout({
   children,
@@ -30,6 +31,7 @@ export default function AppLayout({
 
           {/* Right — Navigation */}
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <NotificationBell />
             <Link href="/dashboard">
               <Button variant="secondary" className="min-h-[36px] px-3 text-xs sm:px-4">
                 Dashboard
