@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { eq } from 'drizzle-orm'
+import { eq, inArray } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { projects, comments } from '@/lib/db/schema'
 import { generateId } from '@/lib/db/ids'
@@ -14,7 +14,23 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     where: (c, { eq: eqC }) => eqC(c.projectId, id),
     orderBy: (c, { asc }) => [asc(c.createdAt)],
   })
-  return ok(rows)
+  if (rows.length === 0) return ok([])
+
+  const { users } = await import('@/lib/db/schema')
+  const userIds = [...new Set(rows.map((r) => r.userId))]
+  const authors = await db.select().from(users).where(inArray(users.id, userIds))
+  const authorMap = new Map(authors.map((u) => [u.id, u]))
+
+  return ok(
+    rows.map((r) => {
+      const author = authorMap.get(r.userId)
+      return {
+        ...r,
+        author: author?.username ?? null,
+        authorAvatar: author?.avatarUrl ?? null,
+      }
+    })
+  )
 }
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {

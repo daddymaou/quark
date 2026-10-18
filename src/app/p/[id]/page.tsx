@@ -7,6 +7,8 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Logo } from '@/components/ui/Logo'
+import { CommentsSection } from '@/components/pen/CommentsSection'
+import { ReportButton } from '@/components/pen/ReportButton'
 import { buildSrcDoc } from '@/lib/preview/buildSrcDoc'
 import { useUser } from '@clerk/nextjs'
 import { FileNode } from '@/lib/types'
@@ -102,16 +104,13 @@ export default function PublicPenPage() {
         return
       }
 
-      // Send Fork email notification to author
+      // Notify the author — recipient is resolved server-side from the pen
       fetch('/api/email/fork', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ownerEmail: 'maou@quark.dev',
-          ownerName: pen.author,
+          penId: pen.id,
           forkerName,
-          penTitle: pen.title,
-          penUrl: `${window.location.origin}/p/${pen.id}`,
         }),
       }).catch(() => {})
 
@@ -234,6 +233,7 @@ export default function PublicPenPage() {
               <Button variant="secondary" className="min-h-[40px]" onClick={handleFork}>
                 Fork
               </Button>
+              <ReportButton penId={pen.id} />
             </div>
           </div>
         </div>
@@ -282,6 +282,9 @@ export default function PublicPenPage() {
             </div>
           </div>
         </div>
+
+        {/* Community */}
+        <CommentsSection penId={pen.id} />
       </main>
 
       {/* Embed Modal */}
