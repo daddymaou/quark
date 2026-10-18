@@ -15,7 +15,7 @@ interface ProjectState {
   loadProjects: () => Promise<void>
   createProject: (name: string) => Promise<Project>
   updateProject: (project: Project) => Promise<string | null>
-  updateFileTree: (fileTree: FileNode[]) => void
+  updateFileTree: (fileTree: FileNode[]) => Promise<string | null>
   updateDependencies: (dependencies: Record<string, string>) => void
   updateVisibility: (visibility: 'private' | 'public' | 'unlisted') => Promise<string | null>
   setIsLoading: (loading: boolean) => void
@@ -87,9 +87,10 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     return null
   },
 
-  updateFileTree: (fileTree: FileNode[]) => {
+  updateFileTree: async (fileTree: FileNode[]) => {
     const current = get().currentProject
-    if (!current) return
+    if (!current) return null
+    const prevProjects = get().projects
     const updatedProject = {
       ...current,
       files: fileTree,
@@ -99,6 +100,20 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       currentProject: updatedProject,
       projects: get().projects.map((p) => (p.id === current.id ? updatedProject : p)),
     })
+    const { error } = await apiPut<Project>(`/api/projects/${current.id}`, {
+      files: fileTree,
+      updatedAt: updatedProject.updatedAt,
+    })
+    if (error) {
+      set({
+        error,
+        currentProject: current,
+        projects: prevProjects,
+      })
+      return error
+    }
+    set({ error: null })
+    return null
   },
 
   updateDependencies: (dependencies: Record<string, string>) => {
