@@ -3,16 +3,16 @@
 
 import { useEditorStore } from '@/lib/store/editorStore'
 import { useProjectStore } from '@/lib/store/projectStore'
+import { findFileNode } from '@/lib/file-utils'
+import { FileIcon } from '@/components/ui/FileIcon'
 import { X } from 'lucide-react'
 
 export function TabBar() {
   const { openFiles, activeFileId, setActiveFile, closeFile, dirtyFiles } = useEditorStore()
   const { currentProject } = useProjectStore()
 
-  const getFileName = (fileId: string) => {
-    const file = currentProject?.files.find((f) => f.id === fileId)
-    return file?.name || 'Untitled'
-  }
+  const getFile = (fileId: string) =>
+    currentProject ? findFileNode(currentProject.files, fileId) : undefined
 
   if (openFiles.length === 0) {
     return (
@@ -27,6 +27,7 @@ export function TabBar() {
       {openFiles.map((fileId) => {
         const isActive = fileId === activeFileId
         const isDirty = dirtyFiles[fileId]
+        const file = getFile(fileId)
         return (
           <div
             key={fileId}
@@ -37,7 +38,8 @@ export function TabBar() {
             }`}
             onClick={() => setActiveFile(fileId)}
           >
-            <span>{getFileName(fileId)}</span>
+            {file && <FileIcon name={file.name} language={file.language} />}
+            <span>{file?.name || 'Untitled'}</span>
             {isDirty && <span className="text-quarkRed">●</span>}
             <button
               className="text-inkFaint hover:text-ink transition-colors"

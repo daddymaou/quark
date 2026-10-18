@@ -3,8 +3,10 @@
 
 import { useProjectStore } from '@/lib/store/projectStore'
 import { useEditorStore } from '@/lib/store/editorStore'
+import { inferLanguage } from '@/lib/file-utils'
+import { FileIcon } from '@/components/ui/FileIcon'
 import { FileNode } from '@/lib/types'
-import { Folder, File, Plus, X } from 'lucide-react'
+import { Folder, Plus, X } from 'lucide-react'
 import { useState } from 'react'
 
 export function FileTree() {
@@ -48,7 +50,7 @@ export function FileTree() {
       id: `file-${Date.now()}`,
       name: name,
       type: 'file',
-      language: 'html',
+      language: inferLanguage(name),
       content: '',
     }
     updateFileTree([...currentProject.files, newFile])
@@ -70,9 +72,9 @@ export function FileTree() {
           onClick={() => handleFileClick(file)}
         >
           {file.type === 'folder' ? (
-            <Folder size={14} className="text-quarkBlue" />
+            <Folder size={14} className="shrink-0 text-quarkBlue" />
           ) : (
-            <File size={14} className="text-inkFaint" />
+            <FileIcon name={file.name} language={file.language} />
           )}
           {file.name}
         </div>
