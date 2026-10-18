@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/Input'
 import { Badge } from '@/components/ui/Badge'
 import { Avatar } from '@/components/ui/Avatar'
 import { Loader } from '@/components/ui/Loader'
+import { ConfirmModal } from '@/components/ui/ConfirmModal'
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { useUser, useClerk } from '@clerk/nextjs'
@@ -28,6 +29,10 @@ export default function SettingsPage() {
   const [passwordSuccess, setPasswordSuccess] = useState(false)
   const [profileError, setProfileError] = useState('')
   const [passwordError, setPasswordError] = useState('')
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
+  const [dangerError, setDangerError] = useState('')
   const [isClerkEnabled] = useState(() => {
     const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
     return !!(publishableKey && publishableKey.startsWith('pk_'))
@@ -163,6 +168,53 @@ export default function SettingsPage() {
       console.log('Avatar updated successfully on Clerk')
     } catch (err) {
       console.error('Failed to upload avatar to Clerk:', err)
+    }
+  }
+
+  const handleExport = async () => {
+    setIsExporting(true)
+    setDangerError('')
+    try {
+      const res = await fetch('/api/me/export')
+      const json = await res.json()
+      if (!json.success) {
+        setDangerError(json.error || 'Export failed.')
+        return
+      }
+      const blob = new Blob([JSON.stringify(json.data, null, 2)], {
+        type: 'application/json',
+      })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `quark-export-${new Date().toISOString().slice(0, 10)}.json`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch {
+      setDangerError('Export failed. Please try again.')
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
+  const handleDeleteAccount = async () => {
+    setIsDeleting(true)
+    setDangerError('')
+    try {
+      const res = await fetch('/api/me', { method: 'DELETE' })
+      const json = await res.json()
+      if (!json.success) {
+        setDangerError(json.error || 'Failed to delete account.')
+        return
+      }
+      // identity and data are gone — end the session client-side
+      await signOut()
+      router.push('/')
+    } catch {
+      setDangerError('Failed to delete account. Please try again.')
+    } finally {
+      setIsDeleting(false)
+      setShowDeleteModal(false)
     }
   }
 
@@ -450,41 +502,62 @@ export default function SettingsPage() {
         </div>
 
         <div className="border border-quarkRed bg-surface p-6">
-          <div className="flex items-start justify-between">
+          {dangerError && (
+            <div className="mb-4 border border-quarkRed bg-quarkRed/10 p-3 font-mono text-xs text-quarkRed">
+              {dangerError}
+            </div>
+          )}
+
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h3 className="font-ui text-lg font-semibold text-ink">
+                Export your data
+              </h3>
+              <p className="mt-1 font-mono text-sm text-inkDim">
+                Download a JSON copy of your profile, pens, comments, and
+                notifications.
+              </p>
+            </div>
+            <Button
+              variant="secondary"
+              className="min-h-[40px] shrink-0"
+              onClick={handleExport}
+              disabled={isExporting}
+            >
+              {isExporting ? 'Exporting...' : 'Export data'}
+            </Button>
+          </div>
+
+          <div className="mt-6 flex items-start justify-between gap-4 border-t border-line pt-6">
             <div>
               <h3 className="font-ui text-lg font-semibold text-quarkRed">
                 Delete account
               </h3>
               <p className="mt-1 font-mono text-sm text-inkDim">
-                Permanently delete your account and all data. This cannot be
-                undone.
+                Permanently delete your account and all data — pens, comments,
+                and notifications. This cannot be undone.
               </p>
             </div>
             <Button
               variant="destructive"
-              className="min-h-[40px]"
-              onClick={() => {
-                if (
-                  confirm(
-                    'Are you sure you want to delete your account? This is permanent.'
-                  )
-                ) {
-                  if (isClerkEnabled && user) {
-                    user.delete().then(() => {
-                      signOut()
-                      router.push('/')
-                    }).catch(err => console.error(err))
-                  } else {
-                    console.log('Account deleted (Mock)')
-                    router.push('/')
-                  }
-                }
-              }}
+              className="min-h-[40px] shrink-0"
+              onClick={() => setShowDeleteModal(true)}
             >
               Delete account
             </Button>
           </div>
         </div>
+
+        <ConfirmModal
+          isOpen={showDeleteModal}
+          onClose={() => setShowDeleteModal(false)}
+          onConfirm={handleDeleteAccount}
+          title="Delete your account?"
+          description="Every pen, comment, report, and notification tied to your account will be permanently removed, and you will be signed out immediately. This cannot be undone."
+          confirmLabel="Delete everything"
+          cancelLabel="Keep my account"
+          isLoading={isDeleting}
+        />
       </section>
     </div>
   )
