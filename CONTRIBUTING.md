@@ -2,6 +2,29 @@
 
 Thanks for your interest in contributing. This document explains the workflow and standards for this repository.
 
+## Local Setup
+
+1. **Prerequisites** — Node.js v20+ (v22 or v24 recommended) and npm v10+.
+2. **Install**:
+   ```bash
+   git clone https://github.com/thepalearchitects/quark.git
+   cd quark
+   npm install
+   ```
+3. **Environment** — copy `.env.example` to `.env.local` and fill in real keys:
+   ```env
+   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
+   CLERK_SECRET_KEY=sk_test_...
+   RESEND_API_KEY=re_...
+   DATABASE_URL=postgresql://...
+   ```
+   The app boots without some of these (Clerk and the database degrade gracefully in dev), but you need all of them for a fully working local instance.
+4. **Run**:
+   ```bash
+   npm run dev
+   ```
+   Open [http://localhost:3000](http://localhost:3000).
+
 ## Workflow
 
 1. **Fork the repository** and create a feature branch from `master`:

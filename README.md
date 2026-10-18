@@ -5,178 +5,172 @@
 <h1 align="center">QUARK</h1>
 
 <p align="center">
-  A high-performance, browser-based frontend playground and code editor.<br/>
-  Build HTML, CSS, and JavaScript apps with real-time execution, sandboxed preview, and instant sharing.
+  <strong>Explain it to the duck. Ship it to the web.</strong><br/>
+  The browser-based frontend playground where ideas become shareable, forkable, embeddable pens.
 </p>
 
 <p align="center">
-  <a href="#quick-start">Quick Start</a> •
-  <a href="#visual-tour--screenshots">Screenshots</a> •
-  <a href="#key-capabilities">Features</a> •
-  <a href="#technical-stack--architecture">Tech Stack</a> •
-  <a href="#devsecops--security">DevSecOps</a> •
-  <a href="#design-system-guidelines">Design System</a>
+  <a href="https://github.com/thepalearchitects/quark/actions/workflows/ci.yml"><img src="https://github.com/thepalearchitects/quark/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="License" /></a>
+  <a href="CONTRIBUTING.md"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen" alt="PRs welcome" /></a>
 </p>
 
 ---
 
-## Visual Tour & Screenshots
+## What is QUARK?
 
-### 1. Interactive Live Code Editor
-Monaco-powered editor pane featuring syntax highlighting, live iframe preview, responsive device toggles (Desktop/Tablet/Mobile), and postMessage console drawer.
+QUARK is a full frontend playground in the browser. Write HTML, CSS, and JavaScript side by side in a Monaco-powered editor, watch a live sandboxed preview update as you type, then publish with one click — your pen gets a shareable page, an embed snippet, SEO-ready social cards, and a home on your public profile.
+
+Fork anyone's public pen into your own workspace, leave comments, report abuse, and build on what the community ships. It's CodePen-like, but the whole loop — edit → publish → discover → fork → notify — runs on one platform.
+
+## Capabilities
+
+- **Monaco editor** — IntelliSense, autocomplete, and syntax highlighting, dynamically loaded to keep the bundle lean
+- **Instant sandboxed preview** — executes in an isolated `iframe` (`allow-scripts`, never `allow-same-origin`), with device toggles for desktop, tablet, and mobile
+- **Live console bridge** — `console.log/warn/error` and uncaught runtime errors stream from the sandbox into a filterable console drawer
+- **One-click publishing** — private, unlisted (link-only), or public; publish limit enforced server-side per plan
+- **Pen settings** — name, description, and tags that power explore search and discovery
+- **Social-ready share pages** — server-rendered metadata so links unfurl with the pen title, author, and description on Twitter, Slack, Discord, and iMessage
+- **Forking** — duplicate any public pen into your workspace; the original author gets an in-app notification and an email
+- **Comments & reports** — discussion on every public pen, with moderation tooling behind it
+- **Profiles** — every author has a public `/u/username` portfolio of their pens
+- **Explore** — search, recent/trending sort, and clickable tag filters with shareable URLs
+- **Notifications** — unread-badge bell in the app header and editor, driven by real fork and comment events
+- **Admin console** — user moderation, pen takedowns, report queue, and platform settings
+- **Abuse protection** — Postgres-backed rate limits on comments, reports, and forks; Clerk session auth on every mutating route
+
+## Visual Tour
+
+### Editor
+Monaco editor, live iframe preview, device toggles, and the console drawer.
 
 ![Quark Code Editor](WebShots/editor.png)
 
----
-
-### 2. Modern Landing Page & Demo Suite
-Hero layout featuring the integrated design system, dynamic wordmark watermarks, live demo preview, and capabilities overview.
+### Landing
+Product landing built on the QUARK design system.
 
 ![Quark Landing Page](WebShots/landing.png)
 
----
-
-### 3. Explore & Community Showcase
-Discover, search, and fork public user pens with tag filtering and popularity sorting.
+### Explore
+Discover, search, tag-filter, and fork public pens.
 
 ![Quark Explore Suite](WebShots/explore.png)
 
----
+### Dashboard
+Manage pens, visibility, and plan limits in one workspace.
 
-### 4. Interactive Documentation
-Comprehensive developer documentation, design system tokens, and API integration guides.
+![Quark Developer Dashboard](WebShots/dashboard.png)
+
+### Public Pen Pages
+Shareable, commentable, forkable — with rich social cards.
 
 ![Quark Documentation](WebShots/docs.png)
 
----
-
-### 5. Developer Dashboard & Pen Management
-Personal workspace for tracking created pens, managing visibility settings (Public, Unlisted, Private), and monitoring usage limits.
-
-![Quark Dashboard](WebShots/dashboard.png)
-
----
-
-### 6. Admin Control Console
-Administrative dashboard for platform management, user moderation, report tracking, and platform analytics.
+### Admin Console
+Moderation, reports, and platform analytics.
 
 ![Quark Admin Console](WebShots/admin.png)
 
----
+## How It Works
 
-## Key Capabilities
+### Architecture
 
-*   **Monaco-Powered Code Editor**: Dynamically loaded to optimize initial bundle size, featuring IntelliSense, autocomplete, syntax highlighting, and a custom dark theme.
-*   **Sandboxed Execution Engine**: Preview environment rendered inside an isolated `iframe` with `sandbox="allow-scripts"` (omitting `allow-same-origin`), protecting host session cookies and token storage.
-*   **Real-time Console Bridge**: Intercepts `console.log`, `console.warn`, `console.error`, and uncaught runtime errors inside the sandbox, streaming them back to the UI Console Drawer.
-*   **Forking & Instant Collaboration**: One-click pen duplication system that clones public code pens directly into user workspaces.
-*   **Transactional Email Suite**: Integrated Resend messaging suite (9 production HTML email templates) alerting authors when pens are forked, subscriptions renew, or logins occur.
-*   **Usage Tracking & Rate Enforcement**: Tier limit checks (Free vs. Pro published pen allowances) integrated into user state.
+```mermaid
+graph LR
+  subgraph Browser["Browser"]
+    UI["Next.js UI<br/>App Router + React 19"]
+    Editor["Monaco Editor"]
+    Preview["Sandboxed Preview<br/>isolated iframe"]
+    Editor --> UI
+    Preview -. "console + errors" .-> UI
+  end
 
----
+  subgraph Platform["QUARK Platform"]
+    API["API Routes<br/>auth-checked, rate-limited"]
+    DB[("Neon Postgres<br/>Drizzle ORM")]
+    Mail["Resend<br/>transactional email"]
+  end
 
-## Quick Start
+  Auth["Clerk<br/>sessions + identity"]
 
-### Prerequisites
-- **Node.js**: v20+ or v24+
-- **NPM**: v10+
-
-### Installation & Local Setup
-
-1. **Clone repository**:
-   ```bash
-   git clone https://github.com/thepalearchitects/quark.git
-   cd quark
-   ```
-
-2. **Install dependencies**:
-   ```bash
-   npm install
-   ```
-
-3. **Configure Environment Variables**:
-   Copy [`.env.example`](.env.example) to `.env.local` (untracked in git) and fill in your keys:
-   ```env
-   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
-   CLERK_SECRET_KEY=sk_test_...
-   RESEND_API_KEY=re_...
-   DATABASE_URL=postgresql://...
-   ```
-
-4. **Launch Development Server**:
-   ```bash
-   npm run dev
-   ```
-   Open [http://localhost:3000](http://localhost:3000) in your browser.
-
----
-
-## Technical Stack & Architecture
-
-QUARK is built with modern, performant web standards:
-
-*   **Frontend Framework**: [Next.js 16 (App Router)](https://nextjs.org/) + TypeScript for route segregation and Server Functions.
-*   **Authentication & Security**: [Clerk Auth](https://clerk.com/) managing user identities and protected route middleware ([`src/middleware.ts`](src/middleware.ts)).
-*   **State Management**: [Zustand](https://github.com/pmndrs/zustand) for high-performance reactive updates across the editor and file tree.
-*   **Styling**: [Tailwind CSS v4](https://tailwindcss.com/) paired with custom CSS design tokens.
-*   **Transactional Emails**: [Resend](https://resend.com/) powering programmatic email delivery.
-
----
-
-## DevSecOps & Security
-
-QUARK includes automated security and code quality pipelines:
-
-*   **Authentication Middleware**: Active session protection via [`src/middleware.ts`](src/middleware.ts) protecting `/dashboard`, `/pen/*`, `/settings`, `/billing`, and `/admin/*`.
-*   **API Security**: Endpoint guards and strict input validation regex on transactional routes ([`/api/email/welcome`](src/app/api/email/welcome/route.ts), [`/api/email/fork`](src/app/api/email/fork/route.ts)).
-*   **DevSecOps CI Pipeline**: Automated GitHub Actions workflow ([`.github/workflows/devsecops.yml`](.github/workflows/devsecops.yml)) executing:
-    - ESLint (`npm run lint`) & TypeScript strict typechecking (`npx tsc --noEmit`).
-    - Automated Secret Scanning via **Gitleaks** (`gitleaks-action`).
-    - Dependency Vulnerability Audits (`npm audit`).
-*   **Automated Dependency Management**: Dependabot ([`.github/dependabot.yml`](.github/dependabot.yml)) grouped weekly dependency updates ignoring unreviewed semver-major bumps.
-
----
-
-## Design System Guidelines
-
-QUARK features a refined **Neo-Brutalist** dark style centered on structure, high readability, and clean lines.
-
-### Color Tokens
-*   `--void` (`#0A0A0A`): Canvas page background
-*   `--surface` (`#1A1A1A`): Panels, cards, and modal backdrops
-*   `--surface-2` (`#141414`): Recessed editor backgrounds and inputs
-*   `--ink` (`#FFFFFF`): Primary text and buttons
-*   `--ink-dim` (`#8A8A8F`): Labels and descriptions
-*   `--ink-faint` (`#55555A`): Comments and borders
-*   `--line` (`#2A2A2E`): Grid dividers
-*   `--quark-blue` (`#4D8DFF`): Interactive status, focus triggers, and info indicators
-*   `--quark-green` (`#3ECF8E`): Success states and live indicators
-*   `--quark-red` (`#FF4545`): Destructive actions and errors
-
-### Typography & Structure
-*   **Typography**: *Space Grotesk* for headings and UI controls; *JetBrains Mono* for code views, filenames, and console output.
-*   **Borders**: Sharp `0.75px` line dividers for pixel-perfect separation.
-*   **Radius**: Subtle `3px` corner radius on cards, tabs, and buttons.
-
----
-
-## Directory Conventions
-
+  UI -->|"REST"| API
+  API --> Auth
+  API --> DB
+  API --> Mail
 ```
-├── .github/
-│   └── workflows/          # CI/CD & DevSecOps automated workflows
-├── public/                 # Static assets (logos, icons, branding)
-├── WebShots/               # High-resolution application screenshots
-└── src/
-    ├── app/                # Next.js App Router handlers and layouts
-    │   ├── (app)/          # Workspace routes (dashboard, pen editor, settings)
-    │   ├── (auth)/         # Authentication routes (sign-in, sign-up, reset)
-    │   ├── (marketing)/    # Marketing landing pages, docs, pricing, explore
-    │   ├── api/            # Hardened API endpoints (email transactional routes)
-    │   ├── embed/          # Embedded iframe pen previews
-    │   └── p/              # Read-only public share routes
-    ├── components/         # Reusable UI components (Editor, Dashboard, UI kit)
-    ├── emails/             # Resend email templates (HTML renderers)
-    ├── lib/                # Shared stores (Zustand), types, and preview builders
-    └── middleware.ts       # Next.js authentication request interceptor
+
+### The fork loop
+
+Every fork is a real event: a new pen, a counter bump, an in-app notification, and an email to the author — all written server-side in one request.
+
+```mermaid
+sequenceDiagram
+  participant V as Visitor
+  participant Q as QUARK API
+  participant DB as Neon Postgres
+  participant R as Resend
+
+  V->>Q: Fork a public pen
+  Q->>DB: Clone pen as a private copy
+  Q->>DB: Increment forks_count
+  Q->>DB: Insert notification for the author
+  Q-->>V: Redirect to the editor with the fork
+  Q->>R: Email the author
 ```
+
+### Pen lifecycle
+
+```mermaid
+stateDiagram-v2
+  [*] --> Private: New pen
+  Private --> Unlisted: Share settings
+  Private --> Public: Publish
+  Unlisted --> Public: Publish
+  Public --> Unlisted: Visibility toggle
+  Public --> Private: Unpublish
+  Unlisted --> Private: Visibility toggle
+```
+
+## Built With
+
+| Layer | Choice |
+| --- | --- |
+| Framework | Next.js 16 (App Router) + TypeScript |
+| UI | React 19, Tailwind CSS v4, custom design tokens |
+| Editor | Monaco (`@monaco-editor/react`, lazy-loaded) |
+| State | Zustand |
+| Database | Neon Serverless Postgres + Drizzle ORM |
+| Auth | Clerk |
+| Email | Resend |
+| Tests | Vitest (live-DB integration suites) |
+| CI | GitHub Actions — lint, build, test, secret scan, audit |
+
+## Trust & Safety
+
+- **Sandboxed execution** — preview code runs in an iframe without `allow-same-origin`; host cookies and tokens are unreachable from user code
+- **Server-side authorization** — every mutating route verifies the Clerk session and scopes writes to the owning user; nothing trusts the client
+- **Rate limiting** — fixed-window counters in Postgres hold across serverless instances (10 comments/min, 5 reports/10 min, 10 forks/hour)
+- **Automated pipelines** — CI runs lint, production build, and integration tests; a separate DevSecOps workflow typechecks, scans for leaked secrets, and audits dependencies
+
+## Design System
+
+QUARK is a **neo-brutalist dark** product: sharp lines, high contrast, zero decoration without a job.
+
+- **Canvas** `--void` `#0A0A0A` · **Surfaces** `#1A1A1A` / `#141414`
+- **Ink** `#FFFFFF` / `#8A8A8F` / `#55555A` · **Lines** `#2A2A2E`
+- **Accent** Quark Blue `#4D8DFF` · **Live** Quark Green `#3ECF8E` · **Danger** Quark Red `#FF4545`
+- **Type** Space Grotesk for UI, JetBrains Mono for code — 3px radii, 0.75px dividers
+
+## Roadmap
+
+- **Subscriptions** — Stripe-backed Pro plans with real checkout and webhooks
+- **Version history** — time-travel on saved pens
+- **Team workspaces** — shared pens and org profiles
+
+## Contributing
+
+We'd love your pull requests. Read [CONTRIBUTING.md](CONTRIBUTING.md) for the workflow, branch naming, and code standards — including how to run the project locally.
+
+## License
+
+[Apache-2.0](LICENSE) © The Pale Architects
