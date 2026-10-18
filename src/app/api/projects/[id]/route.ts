@@ -11,6 +11,7 @@ function toProject(row: typeof projects.$inferSelect): Project {
   return {
     id: row.id,
     name: row.name,
+    description: row.description ?? undefined,
     ownerId: row.ownerId,
     files: row.files,
     dependencies: row.dependencies,
