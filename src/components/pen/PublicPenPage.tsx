@@ -202,7 +202,19 @@ export function PublicPenPage({ penId }: PublicPenPageProps) {
               </div>
               <p className="mt-1 font-mono text-sm text-inkDim">{pen.description}</p>
               <div className="mt-3 flex flex-wrap items-center gap-4">
-                <span className="font-mono text-sm text-ink">by {pen.author}</span>
+                <span className="font-mono text-sm text-ink">
+                  by{' '}
+                  {pen.author !== 'Unknown' ? (
+                    <Link
+                      href={`/u/${pen.author.replace(/^@/, '')}`}
+                      className="text-quarkBlue hover:underline"
+                    >
+                      {pen.author}
+                    </Link>
+                  ) : (
+                    pen.author
+                  )}
+                </span>
                 <span className="font-mono text-xs text-inkFaint">•</span>
                 <span className="font-mono text-xs text-inkFaint">Updated {pen.updatedAt}</span>
                 <span className="font-mono text-xs text-inkFaint">•</span>
