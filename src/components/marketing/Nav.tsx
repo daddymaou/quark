@@ -7,11 +7,16 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState, FormEvent } from 'react'
 import { Search } from 'lucide-react'
+import { OPEN_COMMAND_PALETTE_EVENT } from '@/components/ui/CommandPalette'
 
 export function Nav() {
   const [isOpen, setIsOpen] = useState(false)
   const [search, setSearch] = useState('')
   const router = useRouter()
+
+  const openPalette = () => {
+    window.dispatchEvent(new Event(OPEN_COMMAND_PALETTE_EVENT))
+  }
 
   const handleSearch = (e: FormEvent) => {
     e.preventDefault()
@@ -43,6 +48,15 @@ export function Nav() {
               className="w-40 border border-line bg-surface2 py-1.5 pl-8 pr-2 font-mono text-xs text-ink placeholder:text-inkFaint focus:border-quarkBlue focus:outline-none"
             />
           </form>
+          <button
+            type="button"
+            onClick={openPalette}
+            aria-label="Open command palette"
+            className="flex items-center gap-1.5 border border-line bg-surface2 px-2 py-1.5 font-mono text-xs text-inkFaint transition-colors hover:border-ink hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quarkBlue"
+          >
+            <span aria-hidden="true">Ctrl</span>
+            <span aria-hidden="true">K</span>
+          </button>
           <Link href="/explore" className="hover:text-ink transition-colors">
             Explore
           </Link>
