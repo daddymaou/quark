@@ -50,8 +50,15 @@ export function NotificationBell() {
         setIsOpen(false)
       }
     }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsOpen(false)
+    }
     document.addEventListener('mousedown', onClick)
-    return () => document.removeEventListener('mousedown', onClick)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onClick)
+      document.removeEventListener('keydown', onKey)
+    }
   }, [isOpen])
 
   if (!isSignedIn) return null
@@ -84,19 +91,29 @@ export function NotificationBell() {
     <div ref={containerRef} className="relative">
       <button
         title="Notifications"
+        aria-label={
+          unreadCount > 0
+            ? `Notifications, ${unreadCount} unread`
+            : 'Notifications'
+        }
+        aria-expanded={isOpen}
+        aria-haspopup="true"
         onClick={() => setIsOpen((o) => !o)}
         className="relative flex h-9 w-9 items-center justify-center border border-line text-inkDim transition-colors hover:border-ink hover:text-ink"
       >
-        <Bell size={15} />
+        <Bell size={15} aria-hidden="true" />
         {unreadCount > 0 && (
-          <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center bg-quarkRed px-1 font-mono text-[9px] font-bold leading-none text-void">
+          <span
+            aria-hidden="true"
+            className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center bg-quarkRed px-1 font-mono text-[9px] font-bold leading-none text-void"
+          >
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-11 z-50 w-80 border border-line bg-surface shadow-snap-blue">
+        <div className="absolute right-0 top-11 z-50 w-80 border border-line bg-surface shadow-snap-blue" role="dialog" aria-label="Notifications panel">
           <div className="flex items-center justify-between border-b border-line px-3 py-2">
             <span className="font-mono text-xs uppercase tracking-wider text-inkFaint">
               Notifications
@@ -105,9 +122,10 @@ export function NotificationBell() {
               <button
                 onClick={handleMarkAll}
                 title="Mark all as read"
-                className="flex items-center gap-1 font-mono text-[10px] text-quarkBlue hover:underline"
+                aria-label="Mark all notifications as read"
+                className="flex items-center gap-1 font-mono text-[10px] text-quarkBlue hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quarkBlue"
               >
-                <CheckCheck size={11} />
+                <CheckCheck size={11} aria-hidden="true" />
                 Mark all read
               </button>
             )}
@@ -130,17 +148,18 @@ export function NotificationBell() {
                       notification.read ? 'opacity-60' : ''
                     }`}
                   >
-                    <Icon size={14} className={`mt-0.5 shrink-0 ${style.color}`} />
+                    <Icon size={14} aria-hidden="true" className={`mt-0.5 shrink-0 ${style.color}`} />
                     <span className="min-w-0 flex-1">
                       <span className="block font-mono text-xs leading-snug text-ink">
                         {notification.message}
                       </span>
                       <span className="mt-0.5 block font-mono text-[10px] text-inkFaint">
                         {timeAgo(notification.createdAt)}
+                        {notification.read ? '' : ' — unread'}
                       </span>
                     </span>
                     {!notification.read && (
-                      <span className="mt-1 h-1.5 w-1.5 shrink-0 bg-quarkBlue" />
+                      <span aria-hidden="true" className="mt-1 h-1.5 w-1.5 shrink-0 bg-quarkBlue" />
                     )}
                   </button>
                 )

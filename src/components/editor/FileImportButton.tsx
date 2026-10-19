@@ -91,25 +91,27 @@ export function FileImportButton({ onImport, onNotice, disabled }: FileImportBut
   }
 
   const buttonClass =
-    'text-inkFaint hover:text-ink transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer'
+    'text-inkFaint hover:text-ink transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quarkBlue'
 
   return (
     <>
       <button
         title="Import files"
+        aria-label="Import files"
         className={buttonClass}
         disabled={busy || disabled}
         onClick={() => fileInputRef.current?.click()}
       >
-        <Upload size={14} />
+        <Upload size={14} aria-hidden="true" />
       </button>
       <button
         title="Import folder"
+        aria-label="Import folder"
         className={buttonClass}
         disabled={busy || disabled}
         onClick={() => dirInputRef.current?.click()}
       >
-        <FolderOpen size={14} />
+        <FolderOpen size={14} aria-hidden="true" />
       </button>
       <input
         ref={fileInputRef}

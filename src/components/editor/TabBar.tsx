@@ -23,7 +23,7 @@ export function TabBar() {
   }
 
   return (
-    <div className="flex items-center border-b border-line bg-surface2 px-2 overflow-x-auto">
+    <div className="flex items-center border-b border-line bg-surface2 px-2 overflow-x-auto" role="tablist" aria-label="Open files">
       {openFiles.map((fileId) => {
         const isActive = fileId === activeFileId
         const isDirty = dirtyFiles[fileId]
@@ -31,24 +31,35 @@ export function TabBar() {
         return (
           <div
             key={fileId}
-            className={`flex items-center gap-2 px-3 py-1.5 font-mono text-xs cursor-pointer transition-colors whitespace-nowrap ${
+            role="tab"
+            aria-selected={isActive}
+            tabIndex={isActive ? 0 : -1}
+            aria-label={`${file?.name || 'Untitled'}${isDirty ? ', unsaved changes' : ''}`}
+            className={`flex items-center gap-2 px-3 py-1.5 font-mono text-xs cursor-pointer transition-colors whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quarkBlue focus-visible:ring-inset ${
               isActive
                 ? 'border-b-2 border-quarkBlue text-ink'
                 : 'text-inkFaint hover:text-ink'
             }`}
             onClick={() => setActiveFile(fileId)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                setActiveFile(fileId)
+              }
+            }}
           >
             {file && <FileIcon name={file.name} language={file.language} />}
             <span>{file?.name || 'Untitled'}</span>
-            {isDirty && <span className="text-quarkRed">●</span>}
+            {isDirty && <span className="text-quarkRed" aria-hidden="true">●</span>}
             <button
-              className="text-inkFaint hover:text-ink transition-colors"
+              aria-label={`Close ${file?.name || 'Untitled'}`}
+              className="text-inkFaint hover:text-ink transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quarkBlue"
               onClick={(e) => {
                 e.stopPropagation()
                 closeFile(fileId)
               }}
             >
-              <X size={14} />
+              <X size={14} aria-hidden="true" />
             </button>
           </div>
         )

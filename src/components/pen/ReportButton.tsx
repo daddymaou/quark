@@ -74,7 +74,7 @@ export function ReportButton({ penId }: ReportButtonProps) {
             : 'border-line text-inkFaint hover:border-quarkRed hover:text-quarkRed'
         }`}
       >
-        <Flag size={14} className={isDone ? 'fill-quarkRed text-quarkRed' : ''} />
+        <Flag size={14} aria-hidden="true" className={isDone ? 'fill-quarkRed text-quarkRed' : ''} />
         {isDone ? 'Reported' : 'Report'}
       </button>
 
