@@ -1,6 +1,7 @@
 // app/(marketing)/layout.tsx
 import { Nav } from '@/components/marketing/Nav'  
 import { Footer } from '@/components/ui/Footer'
+import { CommandPalette } from '@/components/ui/CommandPalette'
 
 export const metadata = {
   title: 'Quark — Code Editor',
@@ -17,6 +18,7 @@ export default function MarketingLayout({
       <Nav />
       <main>{children}</main>
       <Footer />
+      <CommandPalette />
     </>
   )
 }

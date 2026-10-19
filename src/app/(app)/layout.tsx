@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
 import { Logo } from '@/components/ui/Logo'
 import { NotificationBell } from '@/components/ui/NotificationBell'
+import { CommandPalette, OPEN_COMMAND_PALETTE_EVENT } from '@/components/ui/CommandPalette'
 
 export default function AppLayout({
   children,
@@ -31,6 +32,15 @@ export default function AppLayout({
 
           {/* Right — Navigation */}
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new Event(OPEN_COMMAND_PALETTE_EVENT))}
+              aria-label="Open command palette"
+              className="flex items-center gap-1.5 border border-line bg-surface2 px-2 py-1.5 font-mono text-[11px] text-inkFaint transition-colors hover:border-ink hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quarkBlue"
+            >
+              <span aria-hidden="true">Ctrl</span>
+              <span aria-hidden="true">K</span>
+            </button>
             <NotificationBell />
             <Link href="/dashboard">
               <Button variant="secondary" className="min-h-[36px] px-3 text-xs sm:px-4">
@@ -59,6 +69,8 @@ export default function AppLayout({
       <main className="mx-auto max-w-6xl px-4 py-6 md:px-8">
         {children}
       </main>
+
+      <CommandPalette />
     </div>
   )
 }
