@@ -22,7 +22,7 @@ export const ConsoleDrawer: React.FC = () => {
       <div className="h-8 bg-surface border-b border-line px-3 flex items-center justify-between select-none">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5 font-semibold text-ink text-[11px] uppercase tracking-wider">
-            <Terminal className="w-3.5 h-3.5 text-quark-blue" />
+            <Terminal className="w-3.5 h-3.5 text-quark-blue" aria-hidden="true" />
             <span>Console</span>
           </div>
 
@@ -30,6 +30,7 @@ export const ConsoleDrawer: React.FC = () => {
           <div className="flex items-center gap-1">
             <button
               onClick={() => setFilter("all")}
+              aria-pressed={filter === "all"}
               className={`px-2 py-0.5 text-[10px] uppercase transition-none ${
                 filter === "all"
                   ? "bg-surface-2 text-ink border border-line"
@@ -40,6 +41,7 @@ export const ConsoleDrawer: React.FC = () => {
             </button>
             <button
               onClick={() => setFilter("error")}
+              aria-pressed={filter === "error"}
               className={`px-2 py-0.5 text-[10px] uppercase transition-none ${
                 filter === "error"
                   ? "bg-surface-2 text-quark-red border border-quark-red"
@@ -50,6 +52,7 @@ export const ConsoleDrawer: React.FC = () => {
             </button>
             <button
               onClick={() => setFilter("warn")}
+              aria-pressed={filter === "warn"}
               className={`px-2 py-0.5 text-[10px] uppercase transition-none ${
                 filter === "warn"
                   ? "bg-surface-2 text-amber-400 border border-amber-400"
@@ -66,15 +69,17 @@ export const ConsoleDrawer: React.FC = () => {
             onClick={clearConsoleLogs}
             className="text-ink-dim hover:text-ink transition-none p-1"
             title="Clear console"
+            aria-label="Clear console"
           >
-            <Trash2 className="w-3.5 h-3.5" />
+            <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
           </button>
           <button
             onClick={() => setConsoleOpen(false)}
             className="text-ink-dim hover:text-ink transition-none p-1"
             title="Close console"
+            aria-label="Close console"
           >
-            <X className="w-3.5 h-3.5" />
+            <X className="w-3.5 h-3.5" aria-hidden="true" />
           </button>
         </div>
       </div>

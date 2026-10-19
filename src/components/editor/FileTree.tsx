@@ -164,13 +164,27 @@ export function FileTree() {
     return (
       <div key={node.id} style={{ paddingLeft: `${depth * 12 + 4}px` }}>
         <div
-          className={`group/row flex cursor-pointer items-center gap-1.5 rounded px-2 py-1 font-mono text-xs transition-colors ${
+          className={`group/row flex cursor-pointer items-center gap-1.5 rounded px-2 py-1 font-mono text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quarkBlue ${
             isSelected
               ? 'bg-quarkBlue/10 text-quarkBlue'
               : node.type === 'file'
                 ? 'text-inkDim hover:bg-surface hover:text-ink'
                 : 'font-semibold text-inkFaint hover:text-ink'
           }`}
+          role="treeitem"
+          tabIndex={0}
+          aria-selected={isSelected}
+          aria-expanded={node.type === 'folder' ? (node.children?.length ?? 0) > 0 : undefined}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault()
+              if (node.type === 'file') {
+                openFile(node.id, node.content)
+              } else {
+                setSelectedFolderId(isSelected ? null : node.id)
+              }
+            }
+          }}
           onClick={() => {
             if (node.type === 'file') {
               openFile(node.id, node.content)
@@ -180,7 +194,7 @@ export function FileTree() {
           }}
         >
           {node.type === 'folder' ? (
-            <Folder size={14} className="shrink-0 text-quarkBlue" />
+            <Folder size={14} className="shrink-0 text-quarkBlue" aria-hidden="true" />
           ) : (
             <FileIcon name={node.name} language={node.language} />
           )}
@@ -211,23 +225,25 @@ export function FileTree() {
             <span className="ml-auto hidden shrink-0 items-center gap-1 group-hover/row:flex">
               <button
                 title="Rename"
-                className="text-inkFaint transition-colors hover:text-ink"
+                aria-label={`Rename ${node.name}`}
+                className="text-inkFaint transition-colors hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quarkBlue"
                 onClick={(e) => {
                   e.stopPropagation()
                   startRename(node)
                 }}
               >
-                <Pencil size={12} />
+                <Pencil size={12} aria-hidden="true" />
               </button>
               <button
                 title="Delete"
-                className="text-inkFaint transition-colors hover:text-quarkRed"
+                aria-label={`Delete ${node.name}`}
+                className="text-inkFaint transition-colors hover:text-quarkRed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quarkRed"
                 onClick={(e) => {
                   e.stopPropagation()
                   setDeletingNode(node)
                 }}
               >
-                <Trash2 size={12} />
+                <Trash2 size={12} aria-hidden="true" />
               </button>
             </span>
           )}
@@ -245,7 +261,7 @@ export function FileTree() {
   }
 
   const iconButton =
-    'text-inkFaint transition-colors hover:text-ink cursor-pointer disabled:opacity-50'
+    'text-inkFaint transition-colors hover:text-ink cursor-pointer disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quarkBlue'
 
   return (
     <div className="space-y-2">
@@ -258,11 +274,11 @@ export function FileTree() {
             disabled={importing}
           />
           <span className="h-3 w-px bg-line" />
-          <button title="New file" className={iconButton} onClick={() => startCreate('file')}>
-            <FilePlus size={14} />
+          <button title="New file" aria-label="New file" className={iconButton} onClick={() => startCreate('file')}>
+            <FilePlus size={14} aria-hidden="true" />
           </button>
-          <button title="New folder" className={iconButton} onClick={() => startCreate('folder')}>
-            <FolderPlus size={14} />
+          <button title="New folder" aria-label="New folder" className={iconButton} onClick={() => startCreate('folder')}>
+            <FolderPlus size={14} aria-hidden="true" />
           </button>
         </div>
       </div>
@@ -303,14 +319,15 @@ export function FileTree() {
               Add
             </button>
             <button
+              aria-label="Cancel"
               onClick={() => {
                 setCreateMode('none')
                 setError('')
                 setNewName('')
               }}
-              className="text-inkFaint transition-colors hover:text-ink"
+              className="text-inkFaint transition-colors hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quarkBlue"
             >
-              <X size={14} />
+              <X size={14} aria-hidden="true" />
             </button>
           </div>
           {error && <p className="mt-1 font-mono text-xs text-quarkRed">{error}</p>}
@@ -319,7 +336,9 @@ export function FileTree() {
 
       {notice && <p className="px-2 font-mono text-[10px] text-quarkGreen">{notice}</p>}
 
-      <div className="space-y-0.5">{files.map((file) => renderNode(file, 0))}</div>
+      <div role="tree" aria-label="Project files" className="space-y-0.5">
+        {files.map((file) => renderNode(file, 0))}
+      </div>
 
       <ConfirmModal
         isOpen={!!deletingNode}

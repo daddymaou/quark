@@ -164,13 +164,15 @@ export function EditorTopBar() {
         {/* Console drawer toggle */}
         <button
           onClick={toggleConsole}
-          className={`font-mono text-xs px-3 py-1.5 border flex items-center gap-1.5 transition-none cursor-pointer ${
+          aria-label="Console"
+          aria-pressed={isConsoleOpen}
+          className={`font-mono text-xs px-3 py-1.5 border flex items-center gap-1.5 transition-none cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quarkBlue ${
             isConsoleOpen
               ? 'bg-surface2 border-quarkBlue text-quarkBlue'
               : 'border-line text-inkDim hover:text-ink hover:border-ink'
           }`}
         >
-          <Terminal size={14} />
+          <Terminal size={14} aria-hidden="true" />
           <span className="hidden md:inline">Console</span>
         </button>
 

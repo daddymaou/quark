@@ -43,6 +43,15 @@ export function PublicPenPage({ penId }: PublicPenPageProps) {
   const [copied, setCopied] = useState(false)
 
   useEffect(() => {
+    if (!showEmbedModal) return
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShowEmbedModal(false)
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [showEmbedModal])
+
+  useEffect(() => {
     let cancelled = false
     const timer = setTimeout(async () => {
       try {
@@ -262,7 +271,8 @@ export function PublicPenPage({ penId }: PublicPenPageProps) {
                 <button
                   key={file.name}
                   onClick={() => setActiveFile(file.name)}
-                  className={`font-mono text-xs px-3 py-1 transition-colors whitespace-nowrap ${
+                  aria-pressed={activeFile === file.name}
+                  className={`font-mono text-xs px-3 py-1 transition-colors whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quarkBlue ${
                     activeFile === file.name
                       ? 'bg-quarkBlue/10 text-quarkBlue border-b-2 border-quarkBlue'
                       : 'text-inkFaint hover:text-ink'
@@ -305,12 +315,18 @@ export function PublicPenPage({ penId }: PublicPenPageProps) {
       {/* Embed Modal */}
       {showEmbedModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-void/80 p-4">
-          <div className="max-w-lg w-full border border-line bg-surface p-6 shadow-snap-blue">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="embed-dialog-title"
+            className="max-w-lg w-full border border-line bg-surface p-6 shadow-snap-blue"
+          >
             <div className="flex items-center justify-between">
-              <h3 className="font-ui text-xl font-bold text-ink">Embed this pen</h3>
+              <h3 id="embed-dialog-title" className="font-ui text-xl font-bold text-ink">Embed this pen</h3>
               <button
                 onClick={() => setShowEmbedModal(false)}
-                className="font-mono text-xl text-inkFaint hover:text-ink transition-colors"
+                aria-label="Close embed dialog"
+                className="font-mono text-xl text-inkFaint hover:text-ink transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quarkBlue"
               >
                 ✕
               </button>
@@ -325,7 +341,7 @@ export function PublicPenPage({ penId }: PublicPenPageProps) {
             </div>
             <button
               onClick={handleCopyEmbed}
-              className="mt-4 border border-quarkBlue px-4 py-2 font-mono text-sm text-quarkBlue hover:bg-quarkBlue hover:text-void transition-colors"
+              className="mt-4 border border-quarkBlue px-4 py-2 font-mono text-sm text-quarkBlue hover:bg-quarkBlue hover:text-void transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quarkBlue"
             >
               {copied ? '✓ Copied!' : 'Copy embed code'}
             </button>

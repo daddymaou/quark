@@ -86,30 +86,36 @@ export function PreviewPane() {
         <div className="flex items-center gap-1.5 border border-line bg-surface/50 p-0.5">
           <button
             onClick={() => setActiveDevice('desktop')}
-            className={`p-1 transition-colors ${
+            title="Desktop Mode"
+            aria-label="Desktop Mode"
+            aria-pressed={activeDevice === 'desktop'}
+            className={`p-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quarkBlue ${
               activeDevice === 'desktop' ? 'bg-surface2 text-quarkBlue' : 'text-inkFaint hover:text-ink'
             }`}
-            title="Desktop Mode"
           >
-            <Laptop size={14} />
+            <Laptop size={14} aria-hidden="true" />
           </button>
           <button
             onClick={() => setActiveDevice('tablet')}
-            className={`p-1 transition-colors ${
+            title="Tablet Mode"
+            aria-label="Tablet Mode"
+            aria-pressed={activeDevice === 'tablet'}
+            className={`p-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quarkBlue ${
               activeDevice === 'tablet' ? 'bg-surface2 text-quarkBlue' : 'text-inkFaint hover:text-ink'
             }`}
-            title="Tablet Mode"
           >
-            <Tablet size={14} />
+            <Tablet size={14} aria-hidden="true" />
           </button>
           <button
             onClick={() => setActiveDevice('mobile')}
-            className={`p-1 transition-colors ${
+            title="Mobile Mode"
+            aria-label="Mobile Mode"
+            aria-pressed={activeDevice === 'mobile'}
+            className={`p-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quarkBlue ${
               activeDevice === 'mobile' ? 'bg-surface2 text-quarkBlue' : 'text-inkFaint hover:text-ink'
             }`}
-            title="Mobile Mode"
           >
-            <Smartphone size={14} />
+            <Smartphone size={14} aria-hidden="true" />
           </button>
         </div>
 
@@ -117,9 +123,12 @@ export function PreviewPane() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setIsFullscreen(!isFullscreen)}
-            className="text-inkFaint hover:text-ink transition-colors"
+            className="text-inkFaint hover:text-ink transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quarkBlue"
+            title={isFullscreen ? 'Exit fullscreen preview' : 'Fullscreen preview'}
+            aria-label={isFullscreen ? 'Exit fullscreen preview' : 'Fullscreen preview'}
+            aria-pressed={isFullscreen}
           >
-            {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+            {isFullscreen ? <Minimize2 size={16} aria-hidden="true" /> : <Maximize2 size={16} aria-hidden="true" />}
           </button>
         </div>
       </div>

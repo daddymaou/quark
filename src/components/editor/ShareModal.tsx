@@ -114,7 +114,8 @@ export const ShareModal: React.FC<ShareModalProps> = ({
           <h2 className="font-ui text-lg font-bold text-ink">Pen settings & share</h2>
           <button
             onClick={onClose}
-            className="font-mono text-base text-inkFaint hover:text-ink transition-colors cursor-pointer"
+            aria-label="Close"
+            className="font-mono text-base text-inkFaint hover:text-ink transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quarkBlue"
           >
             ✕
           </button>

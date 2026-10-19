@@ -129,6 +129,7 @@ export function CommentsSection({ penId }: { penId: string }) {
             maxLength={1000}
             rows={3}
             placeholder="Say something about this pen..."
+            aria-label="Write a comment"
             className="w-full resize-none border border-line bg-surface2 px-3 py-2 font-mono text-sm text-ink placeholder:text-inkFaint focus:border-quarkBlue focus:outline-none"
           />
           <div className="mt-2 flex items-center justify-between">
@@ -191,11 +192,12 @@ export function CommentsSection({ penId }: { penId: string }) {
                   {myId && comment.userId === myId && (
                     <button
                       title="Delete comment"
-                      className="ml-auto text-inkFaint transition-colors hover:text-quarkRed disabled:opacity-50"
+                      aria-label={`Delete comment by @${comment.author || 'unknown'}`}
+                      className="ml-auto text-inkFaint transition-colors hover:text-quarkRed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quarkRed"
                       disabled={deletingId === comment.id}
                       onClick={() => handleDelete(comment.id)}
                     >
-                      <Trash2 size={13} />
+                      <Trash2 size={13} aria-hidden="true" />
                     </button>
                   )}
                 </div>

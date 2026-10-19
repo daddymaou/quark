@@ -17,17 +17,21 @@ export function Modal({
   children,
   className,
 }: ModalProps) {
+  const panelRef = React.useRef<HTMLDivElement>(null)
+
   React.useEffect(() => {
+    if (!isOpen) return
+    const previouslyFocused = document.activeElement as HTMLElement | null
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose()
     }
-    if (isOpen) {
-      document.addEventListener('keydown', handleEscape)
-      document.body.style.overflow = 'hidden'
-    }
+    document.addEventListener('keydown', handleEscape)
+    document.body.style.overflow = 'hidden'
+    panelRef.current?.focus()
     return () => {
       document.removeEventListener('keydown', handleEscape)
       document.body.style.overflow = 'unset'
+      previouslyFocused?.focus?.()
     }
   }, [isOpen, onClose])
 
@@ -43,8 +47,12 @@ export function Modal({
       onClick={handleBackdropClick}
     >
       <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        tabIndex={-1}
         className={cn(
-          'w-full max-w-lg border border-line bg-surface p-6 shadow-snap-blue',
+          'w-full max-w-lg border border-line bg-surface p-6 shadow-snap-blue focus:outline-none',
           className
         )}
       >
