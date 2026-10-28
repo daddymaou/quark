@@ -6,11 +6,11 @@ import { Button } from '@/components/ui/Button'
 import { Logo } from '@/components/ui/Logo'
 import { useProjectStore } from '@/lib/store/projectStore'
 import { useEditorStore } from '@/lib/store/editorStore'
-import { Share2, Save, Upload, Terminal, Check } from 'lucide-react'
+import { Share2, Save, Upload, Terminal, Check, History } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { UserButton } from '@clerk/nextjs'
 import { NotificationBell } from '@/components/ui/NotificationBell'
-import { ShareModal } from '@/components/editor/ShareModal'
+import { VersionHistoryModal } from '@/components/editor/VersionHistoryModal'
 import { FileNode } from '@/lib/types'
 
 const AUTOSAVE_DELAY_MS = 1500
@@ -22,6 +22,7 @@ export function EditorTopBar() {
   const [isPublishing, setIsPublishing] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
   const [showShare, setShowShare] = useState(false)
+  const [showHistory, setShowHistory] = useState(false)
   const [isClerkEnabled] = useState(() => {
     const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
     return !!(publishableKey && publishableKey.startsWith('pk_'))
@@ -48,7 +49,7 @@ export function EditorTopBar() {
     })
   }
 
-  const handleSave = async () => {
+  const handleSave = async (opts?: { snapshot?: boolean }) => {
     if (!currentProject) return
     setIsSaving(true)
     setActionError(null)
@@ -64,6 +65,13 @@ export function EditorTopBar() {
       setActionError(error)
     } else {
       Object.keys(dirtyFiles).forEach((id) => markClean(id))
+      if (opts?.snapshot) {
+        void fetch(`/api/projects/${updatedProject.id}/versions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ summary: opts.summary ?? 'Saved' }),
+        }).catch(() => {})
+      }
     }
     setIsSaving(false)
   }
@@ -117,7 +125,7 @@ export function EditorTopBar() {
     const onKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
         e.preventDefault()
-        if (!savingRef.current) void saveRef.current()
+        if (!savingRef.current) void saveRef.current({ snapshot: true })
       }
     }
     window.addEventListener('keydown', onKeyDown)
@@ -178,7 +186,7 @@ export function EditorTopBar() {
         <Button
           variant="secondary"
           className="min-h-[32px] px-4 text-xs flex items-center gap-1.5"
-          onClick={handleSave}
+          onClick={() => handleSave({ snapshot: true })}
           disabled={isSaving || !hasUnsavedChanges}
           title="Save (Ctrl+S)"
         >
@@ -196,6 +204,18 @@ export function EditorTopBar() {
             </>
           )}
         </Button>
+
+        {currentProject && (
+          <Button
+            variant="secondary"
+            size="icon"
+            aria-label="Open version history"
+            onClick={() => setShowHistory(true)}
+          >
+            <History size={14} />
+            History
+          </Button>
+        )}
 
         {/* Publish button */}
         <Button
@@ -232,6 +252,14 @@ export function EditorTopBar() {
           isOpen={showShare}
           onClose={() => setShowShare(false)}
           project={currentProject}
+        />
+      )}
+
+      {currentProject && (
+        <VersionHistoryModal
+          isOpen={showHistory}
+          onClose={() => setShowHistory(false)}
+          projectId={currentProject.id}
         />
       )}
     </header>

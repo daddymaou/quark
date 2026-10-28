@@ -16,7 +16,7 @@ interface OnboardingStep {
 const steps: OnboardingStep[] = [
   {
     id: 'dashboard',
-    title: 'Welcome to Quark! 🦆',
+    title: 'Welcome to Quark!',
     description: 'This is your dashboard. All your pens live here.',
     target: 'main',
     position: 'bottom',

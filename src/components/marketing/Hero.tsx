@@ -137,7 +137,13 @@ export function Hero() {
               </span>
             </div>
             <div>
-              <span className="block font-mono text-2xl font-bold text-ink">🦆</span>
+              <img
+                src="/duck.svg"
+                alt="Duck"
+                className="block font-mono text-2xl font-bold text-ink"
+                width={20}
+                height={20}
+              />
               <span className="font-mono text-xs uppercase tracking-wider text-inkFaint">
                 Rubber duck included
               </span>
