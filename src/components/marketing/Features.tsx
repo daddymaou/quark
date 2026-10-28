@@ -51,7 +51,14 @@ export function Features() {
           <div className="aspect-video border border-line bg-surface2 p-4 shadow-snap-blue">
             <div className="flex h-full items-center justify-center font-mono text-sm text-inkDim">
               <span className="text-quarkBlue">const</span> duck ={' '}
-              <span className="text-quarkGreen">&apos;🦆&apos;</span>
+              <Image
+                src="/duck.svg"
+                alt="Duck"
+                className="block h-4 w-4"
+                width={4}
+                height={4}
+              />{' '}
+              <span className="text-quarkGreen">&#x1F986;</span>
               <span className="text-inkFaint">;</span>
             </div>
           </div>

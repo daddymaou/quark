@@ -172,7 +172,7 @@ export default async function DocsPage() {
               </p>
               <pre className="border border-line bg-surface2 p-4 text-xs text-ink">
                 {`document.querySelector('h1').addEventListener('click', () => {
-  alert('🦆 Quack!')
+  alert('Duck quack!')
 })`}
               </pre>
               <p>
